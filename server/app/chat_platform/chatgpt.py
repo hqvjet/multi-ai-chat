@@ -3,17 +3,19 @@ import asyncio
 
 client = Client()
 
-async def ask(msg: str):
+async def ask(conversation: list):
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{"role": "user", "content": msg}],
+        # messages=[{"role": "user", "content": msg}],
+        messages=conversation,
         stream=True
     )
 
-    print(response)
-
     for chunk in response:
-        if "choices" in chunk:  # Kiểm tra chunk
-            content = chunk["choices"][0].message.content
-            yield content
-            await asyncio.sleep(0.01)
+        print(chunk.choices[0].delta.content, chunk.choices[0].finish_reason)
+        if chunk.choices[0].finish_reason == "stop":
+            break
+
+        content = chunk.choices[0].delta.content
+        yield content
+        await asyncio.sleep(0.1)
