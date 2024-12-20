@@ -1,5 +1,5 @@
 import tiktoken
-from constants import CHATGPT, GPT_NEOX
+from chat_platform.constants import CHATGPT, GPT_NEOX
 
 gpt_encoder = tiktoken.get_encoding('cl100k_base')
 neox_encoder = tiktoken.get_encoding('gpt2')
@@ -15,9 +15,24 @@ class TokenManager():
         if model == GPT_NEOX:
             return self.gpt_neox_20B_token_remaining
 
+    def get_model(self):
+        if self.chatgpt_token_remaining > 0:
+            model = CHATGPT
+        elif self.gpt_neox_20B_token_remaining > 0:
+            model = GPT_NEOX
+
+        return model
+
     def update_token_remaining(self, req, res, model):
+        print(''.join(token[0] for token in list(req)[1].message))
         if model == CHATGPT:
-            self.chatgpt_token_remaining -= len(gpt_encoder.encode(req)) + len(gpt_encoder.encode(res))
+            self.chatgpt_token_remaining -= (
+                sum(len(gpt_encoder.encode(''.join(token[0] for token in sentence.message))) for sentence in list(req))
+                + len(gpt_encoder.encode(res))
+            )
         elif model == GPT_NEOX:
-            self.gpt_neox_20B_token_remaining -= len(neox_encoder.encode(req)) + len(neox_encoder.encode(res))
+            self.gpt_neox_20B_token_remaining -= (
+                sum(len(neox_encoder.encode(''.join(token[0] for token in sentence.message))) for sentence in list(req))
+                + len(neox_encoder.encode(res))
+            )
 

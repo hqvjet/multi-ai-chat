@@ -13,5 +13,5 @@ class ConversationHistory(BaseModel):
     conversation_history: List[ChatRequest]
 
 class TokenResponse(BaseModel):
-    token_remaining: TokenRemaining
+    token_remaining: int
     model_name: str
