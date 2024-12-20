@@ -3,18 +3,17 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { Input, Button, Card } from "antd";
 import ReactMarkdown from "react-markdown";
+import { Conversation } from "../datatype";
+import { CHAT_API } from "../api";
 
 const { TextArea } = Input
-
-interface Conversation {
-    role: string
-    message: string[][]
-}
 
 export default function Home() {
     const [logo, setLogo] = useState(true);
     const [message, setMessage] = useState<string>("")
     const [conversationHistory, setConversationHistory] = useState<Conversation[]>([])
+    const [model, setModel] = useState<string>('')
+    const [token, setToken] = useState<number>(0)
     const [finishReason, setFinishReason] = useState<boolean>(true)
     const containerRef = useRef<HTMLDivElement>(null)
 
@@ -23,6 +22,16 @@ export default function Home() {
         containerRef.current.scrollTop = containerRef.current.scrollHeight;
         }
     }, [conversationHistory])
+
+    useEffect(() => {
+        const get_status = async () => {
+            const fetch_status = await CHAT_API.get_token()
+            setModel(fetch_status.data.model_name)
+            setToken(fetch_status.data.token_remaining)
+        }
+
+        get_status()
+    }, [])
     
     const updateLatestResponse = (chunk: string) => {
         setConversationHistory((prev) => {
@@ -48,7 +57,8 @@ export default function Home() {
         setConversationHistory(current_conversation)
         setMessage("")
 
-        const fetch_response = await fetch(process.env.NEXT_PUBLIC_SERVER_API + '/ask', {
+
+        const fetch_response = await fetch(process.env.NEXT_PUBLIC_SERVER_API + `/ask?model=${model}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -64,6 +74,7 @@ export default function Home() {
 
         if (reader) {
             stopAndStartNewResponse()
+            let res_answer: string = ''
             while (!done) {
                 const {value, done: readerDone} = await reader.read()
                 done = readerDone
@@ -71,8 +82,13 @@ export default function Home() {
                 if (value) {
                     const chunk = decoder.decode(value, {stream: true})
                     updateLatestResponse(chunk)
+                    res_answer += chunk
                 }
             }
+            console.log(res_answer)
+            const update = await CHAT_API.update_token(current_conversation, res_answer, model)
+            setModel(update.data.model_name)
+            setToken(update.data.token_remaining)
         }
     }
 
@@ -100,7 +116,7 @@ export default function Home() {
 
                 {!logo && <>
                     {/* Chat Box */}
-                    <div className="w-full h-[95%] border-2 overflow-y-auto gap-5 shadow-md flex flex-col item-end" id="chat-container" ref={containerRef}>
+                    <div className="w-full h-[90%] border-2 overflow-y-auto gap-5 shadow-md flex flex-col item-end" id="chat-container" ref={containerRef}>
                         {conversationHistory.map((msg, index) => {
                             // if (index < response.length - 1)
                                 return (
@@ -122,7 +138,7 @@ export default function Home() {
                             onChange={e => setMessage(e.target.value)}
                             onPressEnter={handleEnter}
                         />
-
+                        <div>Using: {model} - Token Remaining: {token}</div>
                     </div>
                 </>}
             </main>

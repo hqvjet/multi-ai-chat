@@ -6,13 +6,13 @@ from fastapi.responses import StreamingResponse
 from schemas import ChatRequest, ChatResponse, ConversationHistory, TokenResponse
 from chat_platform import chatgpt, gpt_neox_20B
 from chat_platform.token_manager import TokenManager
-from chat_platform.constants import CHATGPT, GPT_NEOX
+from chat_platform.constants import CHATGPT, GPT_NEOX, NO_MODEL
 
 
 app = fastapi.FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,3 +41,5 @@ async def handle_chat(msg: ConversationHistory, model: str):
         return StreamingResponse(chatgpt.ask(normalize_conversations(msg.conversation_history)), media_type="text/plain")
     elif model == GPT_NEOX:
         return StreamingResponse(gpt_neox_20B.ask(normalize_conversations(msg.conversation_history)), media_type="text/plain")
+    else:
+        return NO_MODEL
