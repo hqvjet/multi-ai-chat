@@ -4,7 +4,7 @@ from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from schemas import ChatRequest, ChatResponse, ConversationHistory, TokenResponse
-from chat_platform import chatgpt, gpt_neox_20B
+from chat_platform import chatgpt, claudeAI
 from chat_platform.token_manager import TokenManager
 from chat_platform.constants import CHATGPT, GPT_NEOX, NO_MODEL
 
@@ -37,9 +37,12 @@ async def get_token():
 
 @app.post("/api/v1/ask")
 async def handle_chat(msg: ConversationHistory, model: str):
-    if model == CHATGPT:
-        return StreamingResponse(chatgpt.ask(normalize_conversations(msg.conversation_history)), media_type="text/plain")
-    elif model == GPT_NEOX:
-        return StreamingResponse(gpt_neox_20B.ask(normalize_conversations(msg.conversation_history)), media_type="text/plain")
-    else:
-        return NO_MODEL
+    # if model == CHATGPT:
+    #     return StreamingResponse(chatgpt.ask(normalize_conversations(msg.conversation_history)), media_type="text/plain")
+    # else:
+    #     return NO_MODEL
+    # return StreamingResponse(gemini.ask(normalize_conversations(msg.conversation_history)), media_type="text/plain")
+
+    # return StreamingResponse(gemini.ask(normalize_conversations(msg.conversation_history)), media_type="text/plain")
+    return StreamingResponse(claudeAI.ask(normalize_conversations(msg.conversation_history)), media_type="text/plain")
+
