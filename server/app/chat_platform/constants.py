@@ -1,3 +1,19 @@
-CHATGPT = 'CHATGPT'
-GPT_NEOX = 'GPT_NEOX'
-NO_MODEL = 'No model available'
+MODELS_ID = [
+    'gpt-4',
+    'claude-3-opus',
+    'gpt-4-turbo',
+    'llama-3.1-405b',
+    'claude-3.5-sonnet',
+    'gemini-pro'
+    'llama-3.3-70b',
+    'claude-3-sonnet',
+    'gemini-flash',
+    'gpt-3.5-turbo',
+    'gpt-4o',
+    'o1-preview',
+    'o1-mini',
+    'meta-ai',
+    'gpt-4o-mini',
+    'claude-3-haiku',
+    'no_model_available'
+] 

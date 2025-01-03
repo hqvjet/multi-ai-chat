@@ -1,41 +1,33 @@
 import tiktoken
-from chat_platform.constants import CHATGPT, GPT_NEOX, NO_MODEL
+from chat_platform.constants import MODELS_ID
 
 gpt_encoder = tiktoken.get_encoding('cl100k_base')
 neox_encoder = tiktoken.get_encoding('gpt2')
 
 class TokenManager():
     def __init__(self):
-        self.chatgpt_token_remaining = 150
-        self.gpt_neox_20B_token_remaining = 150
+        if len(MODELS_ID) == 0:
+            raise ValueError("models_id cannot be empty")
 
-    def get_token_remaining(self, model: str):
-        if model == CHATGPT:
-            return self.chatgpt_token_remaining
-        elif model == GPT_NEOX:
-            return self.gpt_neox_20B_token_remaining
-        else:
-            return 0
+        self.token_remaining = len(MODELS_ID) * [500]
+        self.current_cursor = 0
 
-    def get_model(self):
-        if self.chatgpt_token_remaining > 0:
-            model = CHATGPT
-        elif self.gpt_neox_20B_token_remaining > 0:
-            model = GPT_NEOX
-        else:
-            model = NO_MODEL
+    def get_token_remaining(self):
+        return self.token_remaining[self.current_cursor]
 
-        return model
+    def get_model_id(self):
+        return self.current_cursor
 
-    def update_token_remaining(self, req, res, model):
-        if model == CHATGPT:
-            self.chatgpt_token_remaining -= (
-                sum(len(gpt_encoder.encode(''.join(token[0] for token in sentence.message))) for sentence in list(req))
-                + len(gpt_encoder.encode(res))
-            )
-        elif model == GPT_NEOX:
-            self.gpt_neox_20B_token_remaining -= (
-                sum(len(neox_encoder.encode(''.join(token[0] for token in sentence.message))) for sentence in list(req))
-                + len(neox_encoder.encode(res))
-            )
+    def get_model_name(self):
+        return MODELS_ID[self.current_cursor]
+
+    def update_token_remaining(self, req, res):
+        self.token_remaining[self.current_cursor] -= (
+            sum(len(gpt_encoder.encode(''.join(token[0] for token in sentence.message))) for sentence in list(req))
+            + len(gpt_encoder.encode(res))
+        )
+
+        if self.token_remaining[self.current_cursor] < 0:
+            self.token_remaining[self.current_cursor] = 0
+            self.current_cursor = min(len(MODELS_ID) - 1, self.current_cursor + 1)
 

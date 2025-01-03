@@ -3,9 +3,9 @@ import asyncio
 
 client = Client()
 
-async def ask(conversation: list):
+async def ask(conversation: list, model_name: str):
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model=model_name,
         # messages=[{"role": "user", "content": msg}],
         messages=conversation,
         stream=True
